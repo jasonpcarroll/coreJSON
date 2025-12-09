@@ -1,0 +1,9 @@
+{
+  "name": "coreJSON",
+  "releases": [
+    "v3.3.1"
+  ],
+  "branches": [
+    "main"
+  ]
+}
