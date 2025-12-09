@@ -13,6 +13,10 @@ on:
         description: 'Branch to release from'
         required: false
         default: 'main'
+      delete_existing_tag_release:
+        description: 'Is this a re-release of existing tag/release? (Default: false)'
+        default: 'false'
+        required: false
 
 jobs:
   release:
@@ -29,4 +33,5 @@ jobs:
         with:
           version_number: ${{ github.event.inputs.version_number }}
           branch: ${{ github.event.inputs.branch }}
+          delete_existing_tag_release: ${{ github.event.inputs.delete_existing_tag_release }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
