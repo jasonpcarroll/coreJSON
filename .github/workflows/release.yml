@@ -3,12 +3,12 @@ name: Release automation
 on:
   workflow_dispatch:
     inputs:
-      commit_id:
-        description: 'Commit ID to tag and create a release for'
-        required: true
       version_number:
         description: 'Release Version Number (Eg, v1.0.0)'
         required: true
+
+env:
+  source_folder_list: "source test"
 
 jobs:
   tag-commit:
@@ -17,17 +17,38 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.commit_id }}
       - name: Configure git identity
         run: |
           git config --global user.name ${{ github.actor }}
           git config --global user.email ${{ github.actor }}@users.noreply.github.com
-      - name: create a new branch that references commit id
+      - name: Update version number in source files
         env:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
-          COMMIT_ID: ${{ github.event.inputs.commit_id }}
-        run: git checkout -b "$VERSION_NUMBER" "$COMMIT_ID"
+          REPO_NAME: ${{ github.event.repository.name }}
+        run: |
+            echo "${{ env.source_folder_list }}" | \
+            xargs -n 1 sh -c \
+            'find $1 -type f \( -name "*.c" -o -name "*.h" \) \
+            -exec sed -i -b -E "0,/^ \* $REPO_NAME/s/^ \* $REPO_NAME.*/ \* $REPO_NAME $VERSION_NUMBER/g" {} +'
+            git add .
+            git commit -m '[AUTO][RELEASE]: Update version number in source files'
+            git push origin main
+      - name : Update version number in manifest.yml
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          sed -i -b "0,/^version/s/^version.*/version: \"$VERSION_NUMBER\"/g" ./manifest.yml
+          git add .
+          git commit -m '[AUTO][RELEASE]: Update version number in manifest.yml'
+          git push origin main
+      - name : Update version number in doxygen
+        env:
+          VERSION_NUMBER: ${{ github.event.inputs.version_number }}
+        run: |
+          sed -i -b "s/PROJECT_NUMBER *=.*/PROJECT_NUMBER         = $VERSION_NUMBER/g" ./docs/doxygen/config.doxyfile
+          git add .
+          git commit -m '[AUTO][RELEASE]: Update version number in doxygen'
+          git push origin main
       - name: Generate SBOM
         uses: FreeRTOS/CI-CD-Github-Actions/sbom-generator@main
         with:
@@ -39,7 +60,7 @@ jobs:
         run: |
           git add .
           git commit -m 'Update SBOM'
-          git push -u origin "$VERSION_NUMBER"
+          git push origin main
       - name: Tag Commit and Push to remote
         env:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
@@ -49,12 +70,10 @@ jobs:
       - name: Verify tag on remote
         env:
           VERSION_NUMBER: ${{ github.event.inputs.version_number }}
-          COMMIT_ID: ${{ github.event.inputs.commit_id }}
         run: |
           git tag -d "$VERSION_NUMBER"
           git remote update
           git checkout tags/"$VERSION_NUMBER"
-          git diff "$COMMIT_ID" tags/"$VERSION_NUMBER"
   create-zip:
     needs: tag-commit
     name: Create ZIP and verify package for release asset.
@@ -65,7 +84,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.commit_id }}
           path: coreJSON
           submodules: recursive
       - name: Checkout disabled submodules
