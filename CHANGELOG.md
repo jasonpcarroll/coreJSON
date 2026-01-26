@@ -1,5 +1,10 @@
 # Change Log for coreJSON Library
 
+## v3.3.1 (January 2026)
+- [#179](https://github.com/FreeRTOS/coreJSON/pull/179) Fix JSON validation issues concerning missing commas, escaped control characters, and hex escaped 0 value. 
+- [#169](https://github.com/FreeRTOS/coreJSON/pull/169) Treat empty JSON object in key-value pair as valid.
+- [#167](https://github.com/FreeRTOS/coreJSON/pull/167) Correctly detect missing key in a key-value pair.
+
 ## v3.3.0 (May 2024)
 - [#157](https://github.com/FreeRTOS/coreJSON/pull/157) MISRA C:2012 compliance check.
 - [#154](https://github.com/FreeRTOS/coreJSON/pull/154) Add ClusterFuzzLite setup.
