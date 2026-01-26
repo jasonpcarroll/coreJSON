@@ -1,6 +1,8 @@
 {
   "name": "coreJSON",
-  "releases": [],
+  "releases": [
+    "v3.3.2"
+  ],
   "branches": [
     "main"
   ]
