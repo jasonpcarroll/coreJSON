@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Release
-        uses: jasonpcarroll/CI-CD-Github-Actions/release@main
+        uses: FreeRTOS/CI-CD-Github-Actions/release@main
         with:
           version_number: ${{ github.event.inputs.version_number }}
           branch: ${{ github.event.inputs.branch }}
